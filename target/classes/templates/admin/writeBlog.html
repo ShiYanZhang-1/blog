@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>写博客</title>
+    <link rel="stylesheet" type="text/css" href="/source/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/source/easyui/themes/icon.css">
+    <script type="text/javascript" src="/source/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="/source/easyui/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/source/easyui/easyui-lang-zh_CN.js"></script>
+
+    <script type="text/javascript" src="/source/ueditor/ueditor.config.js"></script>
+    <script type="text/javascript" src="/source/ueditor/ueditor.all.min.js"></script>
+    <!--建议手动加在语言，避免在ie下有时因为加载语言失败导致编辑器加载失败-->
+    <!--这里加载的语言文件会覆盖你在配置项目里添加的语言类型，比如你在配置项目里配置的是英文，这里加载的中文，那最后就是中文-->
+    <script type="text/javascript" src="/source/ueditor/lang/zh-cn/zh-cn.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //博客类别下拉列表加入请选择
+            $("#blogTypeId").combobox({
+                loadFilter: function (data) {
+                    //id和typeName必须是Blogtype实体类的属性名
+                    var obj = {id: "", typeName: "请选择博客类别"};//类别属性数组
+                    //obj.id="";//分类id
+                    //obj.typeName="请选择博客类别";
+                    //在数组0位置插入obj,不删除原来的元素
+                    data.splice(0, 0, obj)
+                    return data;
+                }
+            });
+        })
+
+
+
+        function submitData() {
+            //获取标题
+            var title = $("#title").textbox("getValue");
+            //获取内容
+            var content = UE.getEditor('editor').getContent();
+            //获取类型
+            var blogTypeId = $("#blogTypeId").combobox("getValue");
+            //获取关键字
+            var keyWord = $("#keyWord").textbox("getValue");
+            //非空验证
+            if (title.length == 0) {
+                $.messager.alert("系统提示", "博客标题不能为空！", "info");
+            } else if (blogTypeId.length == 0) {
+                $.messager.alert("系统提示", "请选择博客类别！", "info");
+            } else if (content.length == 0) {
+                $.messager.alert("系统提示", "博客内容不能为空！", "info");
+            } else {
+                var contentNoTag = UE.getEditor('editor').getContentTxt();//获取纯文本
+                var summary = UE.getEditor('editor').getContentTxt().substr(0,155);//获取纯文本
+                //提交到服务器的参数列表
+                var param = {
+                    "title": title,
+                    "content": content,
+                    "typeId": blogTypeId,
+                    "keyWord": keyWord,
+                    "summary": summary,
+                    "contentNoTag":contentNoTag
+                };
+                //发送提交请求
+                $.post("/admin/blog/addBlog", param, function (data) {
+                    if (data.success) {
+                        $.messager.show({
+                            title: '系统提示',
+                            msg: '博客发布成功',
+                            timeout: 3000,
+                            showType: 'slide'
+                        });
+                        //将表单清空
+                        resultValue();
+                    }else{
+                        $.messager.show({
+                            title: '系统提示',
+                            msg: '博客发布失败',
+                            timeout: 3000,
+                            showType: 'slide'
+                        });
+                    }
+                }, "json");
+            }
+
+
+
+
+        }
+
+        /**
+         * 清空表单
+         */
+        function resultValue(){
+            $("#title").textbox("setValue","");
+            $("#blogTypeId").combobox("setValue","");
+            UE.getEditor('editor').setContent('');
+            $("#keyWord").textbox("setValue","");
+        }
+    </script>
+</head>
+<body style="margin: 10px">
+
+<div id="p" class="easyui-panel" title="编写博客" style="padding: 10px;width: 99%">
+    <table cellspacing="20px">
+        <tr>
+            <td width="80px">博客标题：</td>
+            <td>
+                <input class="easyui-textbox" type="text" id="title" name="title" style="width: 400px" required/>
+            </td>
+        </tr>
+        <tr>
+            <td>所属类别：</td>
+            <td>
+                <input id="blogTypeId" class="easyui-combobox"
+                       data-options="url:'/admin/blogType/typeItem',valueField:'id',textField:'typeName'"
+                       name="blogType.id" editable="false" panelHeight="auto"/>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">博客内容：</td>
+            <td>
+                <textarea id="editor" name="content" type="text/plain" style="width:100%;height:300px;"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td>关键字：</td>
+            <td>
+                <input class="easyui-textbox" type="text" id="keyWord" name="keyWord" style="width: 400px"/>&nbsp;(多个关键字中间用空格隔开)
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <a href="javascript:submitData()" class="easyui-linkbutton"
+                   data-options="iconCls:'icon-submit'">发布博客</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- 实例化编辑器 -->
+<script type="text/javascript">
+    var ue = UE.getEditor('editor');//参数是要渲染的id
+</script>
+
+</body>
+</html>

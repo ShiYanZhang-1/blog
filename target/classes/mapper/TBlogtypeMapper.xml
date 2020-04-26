@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.shiyana.blog.mapper.TBlogtypeMapper">
+
+    <select id="getBlogTypeIdAndBlogCount" resultType="top.shiyana.blog.pojo.entity.TBlogtype">
+        select t.typeName ,t.id, COUNT(b.typeId) blogCount
+        FROM t_blogtype t
+        LEFT JOIN t_blog  b on t.id = b.typeId
+        GROUP BY t.typeName ,t.id
+    </select>
+</mapper>

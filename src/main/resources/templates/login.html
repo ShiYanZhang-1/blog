@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html  xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>登录&注册--医疗管理系统</title>
+<!--图标样式-->
+<link rel='stylesheet' th:href='@{/source/css/all.min.css}'>
+<link rel="stylesheet" th:href='@{/source/css/style.css}'>
+
+	<style>
+		#select{
+			-webkit-user-select:none;
+			-moz-user-select:none;
+			-ms-user-select:none;
+			user-select:none;
+		}
+		.notclick {
+			pointer-events: none;
+
+		}
+	</style>
+</head>
+
+<body>
+
+  <h2>医疗管理系统</h2>
+<div class="container" id="container">
+	<div class="form-container sign-up-container">
+		<form  id="regest" action=""  method="post">
+			<h1>注册</h1>
+			<!--<input type="certId" name="certId" placeholder="身份证号(若注册管理员则不需要)" />-->
+			<input type="username" name="userName" required placeholder="用户名" />
+			<input type="password" name="password" required placeholder="密码" />
+			<input id="regist_email" type="email" name="email" placeholder="邮箱" />
+			<div style="display: flex">
+				<input id="code"  type="text" name="code" placeholder="验证码" />
+				<div id="select" style="width: 150px;box-shadow: 2px 4px 6px #000; border-radius:10px;cursor: pointer;
+						margin-top: 8px;margin-left: 5px;height: 38px;border: solid violet;text-align: center;line-height: 38px">
+					验证码
+				</div>
+			</div>
+			<div>
+				<button type="button" onclick="regest()" style="cursor: pointer">注册</button><button style="cursor: pointer" type="reset">重置</button>
+			</div>
+			<span id="message2" style="color: red"></span>
+		</form>
+	</div>
+	<div class="form-container sign-in-container">
+		<!--onsubmit="return login()"-->
+		<form  id="login" action="/blogger/login" method="post" >
+			<h1>登录</h1>
+			<input type="text" name="email" placeholder="邮箱" value="123@qq.com"/>
+			<input type="password"  name="password" placeholder="密码" value="123"/>
+			<div style="cursor: pointer">
+				<button  type="submit">登录</button><button  type="reset">重置</button>
+			</div>
+			<span id="message" style="color: red"></span>
+		</form>
+	</div>
+	<div class="overlay-container">
+		<div class="overlay">
+			<div class="overlay-panel overlay-left">
+				<h1>欢迎回来！</h1>
+				<h3>请您先登录的个人信息，进行操作。</h3>
+				<button class="ghost" id="signIn" style="cursor: pointer">登录</button>
+			</div>
+			<div class="overlay-panel overlay-right">
+				<h1>你好朋友！</h1>
+				<h3>输入您的个人信息注册。</h3>
+				<button  style="cursor: pointer" class="ghost" id="signUp">注册</button>
+			</div>
+		</div>
+	</div>
+</div>
+  <script th:src="@{/source/js/jquery-3.4.1.min.js}"></script>
+  <script type="text/javascript">
+
+	  $(function () {
+	  	//验证码点击事件
+		$("#select").click(function () {
+			$("#select").html('验证码');
+			let email = $("#regist_email").val();
+			let myReg=/^[a-zA-Z0-9_-]+@([a-zA-Z0-9]+\.)+(com|cn|net|org)$/;
+
+			if(myReg.test(email)){
+				//点击验证码并且邮箱验证通过 就设置该div不能被点击 而且颜色变为灰色
+				$("#select").addClass("notclick");
+				$('#select').css("background","lightgray");
+				//如果之前有邮箱输入不正确的 移除那一段提示
+				$("#message2").empty();
+				$.get(
+					'/admin/user/email/'+email
+					,{}
+					,function (data) {
+						if(data.code == 200){
+							//如果返回的值200就开始倒计时
+							$("#message2").empty();
+							countDown(120);
+						}/*else{
+							$("#select").html('抱歉！请稍后再试');
+						}*/
+					}
+				);
+				return true;
+			}else{
+				$("#message2").html("邮箱格式不对!");
+				return false;
+			}
+		});
+
+	  });
+
+	  let timer;
+	  //执行120秒倒计时
+	  function countDown(i){
+		  if(i == null ){
+			  i = 120;
+		  }
+		  timer = setInterval(function(){
+			  if(i == -1){
+				  backRegist();
+			  }else{
+				  // document.getElementById("daojishi").innerHTML=i;
+				  // document.body.innerHTML = i;
+				  $("#select").html(i+' (S)')
+				  --i;
+			  }
+		  },1000);
+		  return timer;
+	  }
+
+	  function stopcountDown(){
+		  clearInterval(timer);
+	  }
+
+	  function backRegist() {
+		  stopcountDown();
+		  // clearInterval(timer);
+		  //倒计时走完把不能点击事件移除
+		  $("#select").removeClass("notclick");
+		  //把背景变为白色
+		  $('#select').css("background","white");
+		  //把div中的文字从倒计时0s不动  变为验证码而且可以点击了
+		  $("#select").html('验证码');
+	  }
+
+
+	  function regest(){
+		  //获取验证码是否输入
+		  let code = $("#code").val();
+		  if(code ==null || code.length !=6){
+			  $("#message2").html("验证码不正确！！！!");
+			  return false;
+		  }
+		  let d = {};
+		  let t = $('#regest').serializeArray();
+		  $.each(t, function() {
+			  d[this.name] = this.value;
+		  });
+		  let json=JSON.stringify(d);
+		  console.log(json);
+		  $.ajax({
+			  url:"/admin/user/register",
+			  type:'post',
+			  data:json,
+			  contentType: "application/json;charset=utf-8",
+			  success:function(data){
+				  if(data.code==200){
+					  backRegist();
+					  alert(data.message);
+					  // location.href="/hospital-sys/hospital/login";
+				  }
+				  else {
+					  backRegist();
+					  alert(data.message);
+				  }
+			  }/*,
+			  error:function (data) {
+				  layer.msg(data.message, {
+					  time: 2000, //2s后自动关闭
+				  });
+			  }*/
+		  });
+		  return false
+	  }
+
+	  function login(){
+		  let d = {};
+		  let t = $('#login').serializeArray();
+		  $.each(t, function() {
+			  d[this.name] = this.value;
+		  });
+		  let json=JSON.stringify(d);
+		  $.ajax({
+			  url:"/blogger/login",
+			  method:'post',
+			  data:json,
+			  contentType: "application/json;charset=utf-8",
+			  success:function(data){
+				  console.log(data.code);
+				  if (data.code == 202) {//用户登录成功
+					  //判断角色，跳转至不同的视图中
+					  /*if (data.message == '1') { //管理员
+                          window.location.href = "/admin/index";
+                      } else if(data.message == '2'){ //医生
+                          window.location.href = "/doctor/index";
+                      } else {//患者
+                          window.location.href = "/patient/index";
+                      }*/
+				  } else {
+					  $("#message").text(data.message);
+				  }
+			  },
+			  error:function (data) {
+				  layer.msg(data.message, {
+					  time: 2000, //2s后自动关闭
+				  });
+			  }
+		  });
+		  return false
+	  }
+
+
+  </script>
+<script  th:src="@{/source/js/index.js}"></script>
+</body>
+</html>

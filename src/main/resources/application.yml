@@ -1,0 +1,35 @@
+spring:
+  #Redis相关配置
+  redis:
+    host: 192.192.1.5
+    port: 6379
+    jedis:
+      pool:
+        max-active: 8
+        max-wait: -1
+        max-idle: 500
+        min-idle: 0
+    lettuce:
+      shutdown-timeout: 0
+  mail:
+    host: smtp.qq.com
+    protocol: smtp
+    port: 465
+    username: 441162079@qq.com
+    password: tzvejrnypspqbjji
+    default-encoding: utf-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  #热部署配置
+  devtools:
+    restart:
+      enabled: true  #设置开启热部署
+      additional-paths: src/main/java #重启目录
+      exclude: WEB-INF/**
+  freemarker:
+    cache: false    #页面不加载缓存，修改即时生效

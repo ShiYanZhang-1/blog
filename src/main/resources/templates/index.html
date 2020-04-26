@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>个人博客系统-首页</title>
+    <link href="/source/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="/source/css/blog.css" rel="stylesheet">
+    <script src="/source/js/jquery-3.4.1.min.js"></script>
+    <script src="/source/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/source/js/leftmenu.js"></script>
+    <script type="text/javascript" src="/source/ueditor/third-party/SyntaxHighlighter/shCore.js"></script>
+    <link rel="stylesheet" href="/source/ueditor/third-party/SyntaxHighlighter/shCoreDefault.css">
+    <script type="text/javascript">
+        SyntaxHighlighter.all();
+
+        $(function () {
+            //当点击评论按钮
+            $("#commentBtn").click(function () {
+                //获取输入的内容
+                var content = $("#comment").val().trim();
+                //获取当前的博客id
+                var blogId = $("#blogId").val().trim();
+                //判断评论内容是否为空
+                if(content==null || content.length==0){
+                    alert("评论内容不能为空！");
+                    return;
+                }
+                $.post("/comment/addComment",{"content":content,"blogId":blogId},function (data) {
+                    if(data.success){
+                        alert("博客评论成功！待审核通过后显示！");
+                        $("#comment").val("");//清空评论输入框信息
+                    }else {
+                        alert("博客评论失败！");
+                    }
+                },"json");
+            });
+        })
+    </script>
+</head>
+<body>
+<div class="container-fluid">
+    <!--头部-->
+    <!-- 插入代码片段 -->
+    <div id="header" th:insert="foreign/common :: #h"></div>
+    <!-- 中间主体内容部分 -->
+    <div class="row" style="margin-top: 80px">
+        <!-- 左侧导航栏 -->
+        <div id="leftMenu" th:insert="foreign/common :: #lm"></div>
+
+        <!-- 内容显示页 -->
+        <div class="col-md-9" th:insert="${pageContent} :: #content">
+            <!--核心部分-->
+        </div>
+
+        <!-- 内容显示页 -->
+       <!-- <div class="col-md-9" th:insert="foreign/main :: #content"></div>-->
+    </div>
+    <!-- 底部部分 -->
+    <div id="footer" th:insert="foreign/common :: #f"></div>
+</div>
+</body>
+</html>

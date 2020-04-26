@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.shiyana.blog.mapper.TBlogMapper">
+
+    <resultMap id="baseResultMap" type="top.shiyana.blog.pojo.entity.TBlog">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result property="clickHit" column="clickHit"/>
+        <result property="keyWord" column="keyWord"/>
+        <result property="releaseDate" column="releaseDate"/>
+        <result property="typeId" column="typeId"/>
+        <result property="replyHit" column="replyHit"/>
+        <result property="content" column="content"/>
+    </resultMap>
+
+
+    <!--查询日期以及统计数量-->
+    <select id="findBlogDataAndCount" resultType="top.shiyana.blog.pojo.entity.TBlog">
+        select DATE_FORMAT(releaseDate,'%Y年%m月') releaseDateStr,count(1) blogCount from t_blog GROUP BY DATE_FORMAT(releaseDate,'%Y年%m月') ORDER BY releaseDateStr DESC
+    </select>
+
+
+    <!--分页查询博客信息-->
+    <select id="findBlogByPage" resultType="top.shiyana.blog.pojo.entity.TBlog">
+        select * from t_blog b
+        <where>
+            <if test="blog.keyWord!=null and blog.keyWord!=''">
+                and  b.keyword like concat('%',#{blog.keyWord},'%')
+            </if>
+            <if test="blog.typeId!=null">
+                and b.typeId = #{blog.typeId}
+            </if>
+            <if test="blog.releaseDateStr!=null and blog.releaseDateStr!=''">
+                and date_format(b.releasedate,'%Y年%m月') = #{blog.releaseDateStr}
+            </if>
+        </where>
+        order by b.releasedate desc
+    </select>
+
+    <!--连表查询的结果映射-->
+    <resultMap id="blogTypeResultMap" type="top.shiyana.blog.pojo.entity.TBlog" extends="baseResultMap">
+        <association property="blogtype" javaType="top.shiyana.blog.pojo.entity.TBlogtype">
+            <id column="type_id" property="id"/>
+            <result property="typeName" column="typeName"/>
+        </association>
+    </resultMap>
+    <!--通过连表查询博客详情-->
+    <select id="findBlogById" resultMap="blogTypeResultMap">
+         select b.* ,t.id type_id,t.typeName from t_blog b
+         inner join t_blogtype t on b.typeId = t.id
+         where b.id = #{id}
+    </select>
+
+    <!--  通过当前博客id查询上一篇博客的id（将id小于当前id的所有博客降序排列取出第一条）-->
+    <select id="findPreBlogById" resultType="top.shiyana.blog.pojo.entity.TBlog">
+        select * from t_blog where id &lt; #{id} ORDER BY id DESC limit 1
+    </select>
+
+    <!--  通过当前博客id查询下一篇博客的id（将id小于当前id的所有博客升序排列取出第一条）-->
+    <select id="findNextBlogById" resultType="top.shiyana.blog.pojo.entity.TBlog">
+        select * from t_blog where id &gt; #{id}  ORDER BY id ASC limit 1
+    </select>
+
+
+</mapper>
